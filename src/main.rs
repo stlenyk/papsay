@@ -1,11 +1,14 @@
+use std::io::{self, Read};
+
+use atty::Stream;
 use clap::Parser;
-use clap_stdin::MaybeStdin;
+use rand::Rng;
+use rand_distr::Distribution;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Parser)]
 struct Args {
-    #[clap(default_value = "-")]
-    message: MaybeStdin<String>,
+    message: Option<String>,
 }
 
 fn pappify(s: &str) -> String {
@@ -51,13 +54,34 @@ fn pappify(s: &str) -> String {
     let top_border = format!(" {} ", "_".repeat(n_cols + 2));
     let bot_border = format!(" {} ", "-".repeat(n_cols + 2));
     let message_text = format!("{}\n{}\n{}", top_border, message_text, bot_border);
-    let pap_text = include_str!("../papjesz.pap");
+    const PAP_TEXT: &str = include_str!("../papjesz.pap");
 
-    format!("{}\n{}", message_text, pap_text)
+    format!("{}\n{}", message_text, PAP_TEXT)
 }
 
 fn main() {
     let args = Args::parse();
-    let message = pappify(&args.message);
-    println!("{}", message);
+    let message = args.message;
+
+    if !atty::is(Stream::Stdin) {
+        let mut message = Vec::new();
+        io::stdin().read_to_end(&mut message).unwrap();
+        let message = String::from_utf8(message).unwrap();
+        let message = message.trim_end();
+        println!("{}", pappify(message));
+    } else if let Some(message) = message {
+        println!("{}", pappify(&message));
+    } else {
+        let lines_database = include_str!("../transkrypcja-bez-didaskaliów.txt")
+            .lines()
+            .collect::<Vec<_>>();
+
+        let distribution = rand_distr::Normal::<f32>::new(3.0, 1.0).unwrap();
+        let mut rng = rand::thread_rng();
+        let n_lines = distribution.sample(&mut rng).round() as usize;
+        let idx = rng.gen_range(0..lines_database.len());
+
+        let message = lines_database[idx..(idx + n_lines).min(lines_database.len())].join("\n");
+        println!("{}", pappify(&message));
+    }
 }
