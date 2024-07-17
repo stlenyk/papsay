@@ -1,35 +1,46 @@
 use clap::Parser;
+use clap_stdin::MaybeStdin;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Parser)]
 struct Args {
-    message: String,
+    #[clap(default_value = "-")]
+    message: MaybeStdin<String>,
 }
 
 fn pappify(s: &str) -> String {
     let message = s.replace('\t', "    ");
 
     let message_lines = textwrap::wrap(&message, 40);
-    let n_cols = message_lines.iter().map(|s| s.len()).max().unwrap_or(0);
+    let lines_graphemes: Vec<Vec<_>> = message_lines
+        .iter()
+        .map(|s| s.graphemes(true).collect())
+        .collect();
+    let n_cols = lines_graphemes.iter().map(|s| s.len()).max().unwrap_or(0);
 
-    let message_text = match message_lines.len() {
+    let message_text = match lines_graphemes.len() {
         0 => "< >".to_owned(),
 
-        1 => format!("< {} >", message_lines[0]),
+        1 => format!("< {} >", lines_graphemes[0].concat()),
 
         _ => {
-            let first_line = message_lines.first().unwrap();
+            let first_line = lines_graphemes.first().unwrap();
             let first_line = format!(
                 "/ {}{} \\",
-                first_line,
+                first_line.concat(),
                 " ".repeat(n_cols - first_line.len())
             );
 
-            let last_line = message_lines.last().unwrap();
-            let last_line = format!("\\ {}{} /", last_line, " ".repeat(n_cols - last_line.len()));
+            let last_line = lines_graphemes.last().unwrap();
+            let last_line = format!(
+                "\\ {}{} /",
+                last_line.concat(),
+                " ".repeat(n_cols - last_line.len())
+            );
 
-            let middle_lines = message_lines[1..message_lines.len() - 1]
+            let middle_lines = lines_graphemes[1..lines_graphemes.len() - 1]
                 .iter()
-                .map(|s| format!("| {}{} |\n", s, " ".repeat(n_cols - s.len())))
+                .map(|s| format!("| {}{} |\n", s.concat(), " ".repeat(n_cols - s.len())))
                 .collect::<Vec<_>>()
                 .join("");
 
