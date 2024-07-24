@@ -7,30 +7,16 @@ use rand_distr::Distribution;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Clone)]
-enum Papież {
-    Ascii,
-    UTF8,
-    FromFile(String),
-}
+struct Papież(String);
 
 impl std::str::FromStr for Papież {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "ascii" => Ok(Papież::Ascii),
-            "utf8" => Ok(Papież::UTF8),
-            s => Ok(Papież::FromFile(s.to_owned())),
-        }
-    }
-}
-
-impl Papież {
-    fn text(&self) -> String {
-        match self {
-            Papież::Ascii => include_str!("../papieże/ascii.pap").to_owned(),
-            Papież::UTF8 => include_str!("../papieże/utf8.pap").to_owned(),
-            Papież::FromFile(path) => std::fs::read_to_string(path).unwrap(),
+            "ascii" => Ok(Self(include_str!("../papieże/ascii.pap").to_owned())),
+            "utf8" => Ok(Self(include_str!("../papieże/utf8.pap").to_owned())),
+            s => Ok(Self(std::fs::read_to_string(s).map_err(|e| e.to_string())?)),
         }
     }
 }
@@ -88,7 +74,7 @@ fn pappify(message: &str, papież: &Papież) -> String {
     let bot_border = format!(" {} ", "-".repeat(n_cols + 2));
     let message_text = format!("{}\n{}\n{}", top_border, message_text, bot_border);
 
-    format!("{}\n{}", message_text, papież.text())
+    format!("{}\n{}", message_text, papież.0)
 }
 
 fn main() {
