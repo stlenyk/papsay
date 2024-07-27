@@ -1,7 +1,11 @@
-use std::io::{self, Read};
+use std::{
+    fs,
+    io::{self, Read},
+};
 
 use atty::Stream;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::Shell;
 use rand::Rng;
 use rand_distr::Distribution;
 use unicode_segmentation::UnicodeSegmentation;
@@ -16,18 +20,30 @@ impl std::str::FromStr for Papież {
         match s {
             "ascii" => Ok(Self(include_str!("../papieże/ascii.pap").to_owned())),
             "utf8" => Ok(Self(include_str!("../papieże/utf8.pap").to_owned())),
-            s => Ok(Self(std::fs::read_to_string(s).map_err(|e| e.to_string())?)),
+            s => Ok(Self(fs::read_to_string(s).map_err(|e| e.to_string())?)),
         }
     }
 }
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Args {
-    message: Option<String>,
+struct Cli {
+    message: Option<Vec<String>>,
+
+    /// One of: ascii, utf8 or a path to a file containing a custom papież
     #[arg(short, long, default_value = "utf8")]
-    /// One of: ascii, utf8, or a path to a file containing a custom papież.
     papież: Papież,
+
+    /// Generate shell completions
+    #[arg(
+        short,
+        long,
+        long_help = "Generate shell completions
+        Example:
+        $ papsay --completions zsh > _papsay
+        $ sudo mv _papsay /usr/local/share/zsh/site-functions"
+    )]
+    completions: Option<Shell>,
 }
 
 fn pappify(message: &str, papież: &Papież) -> String {
@@ -78,9 +94,22 @@ fn pappify(message: &str, papież: &Papież) -> String {
 }
 
 fn main() {
-    let args = Args::parse();
-    let message = args.message;
+    let args = Cli::parse();
 
+    if let Some(shell) = args.completions {
+        clap_complete::generate(
+            shell,
+            &mut Cli::command(),
+            env!("CARGO_PKG_NAME"),
+            &mut io::stdout(),
+        );
+        return;
+    }
+
+    let message = args.message.map(|m| m.join(" "));
+
+    // Case for when input is being piped
+    // E.g. echo "Hello, World!" | papsay
     let message = if !atty::is(Stream::Stdin) {
         let mut message = Vec::new();
         io::stdin().read_to_end(&mut message).unwrap();
