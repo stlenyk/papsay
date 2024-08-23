@@ -1,6 +1,7 @@
 use std::{
     fs,
     io::{self, Read},
+    sync::LazyLock,
 };
 
 use atty::Stream;
@@ -46,6 +47,7 @@ struct Cli {
     completions: Option<Shell>,
 }
 
+/// Adds a border around the message and appends the papież at the bottom
 fn pappify(message: &str, papież: &Papież) -> String {
     let message = message.replace('\t', "    ");
 
@@ -93,6 +95,15 @@ fn pappify(message: &str, papież: &Papież) -> String {
     format!("{}\n{}", message_text, papież.0)
 }
 
+// Credits:
+// https://www.reddit.com/r/2137/comments/a5z1k9/wywiad_z_ziarnem_zapisany_w_formie_dramatu/
+static ZIARNO_DATABASE: LazyLock<Vec<&str>> = LazyLock::new(|| {
+    include_str!("../transkrypcja-bez-didaskaliów.txt")
+        .lines()
+        .filter(|s| !s.is_empty())
+        .collect()
+});
+
 fn main() {
     let args = Cli::parse();
 
@@ -119,17 +130,12 @@ fn main() {
     } else if let Some(message) = message {
         message
     } else {
-        let lines_database = include_str!("../transkrypcja-bez-didaskaliów.txt")
-            .lines()
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>();
-
         let distribution = rand_distr::Normal::<f32>::new(3.0, 1.0).unwrap();
         let mut rng = rand::thread_rng();
         let n_lines = distribution.sample(&mut rng).round() as usize;
-        let idx = rng.gen_range(0..lines_database.len());
+        let idx = rng.gen_range(0..ZIARNO_DATABASE.len());
 
-        lines_database[idx..(idx + n_lines).min(lines_database.len())].join("\n")
+        ZIARNO_DATABASE[idx..(idx + n_lines).min(ZIARNO_DATABASE.len())].join("\n")
     };
 
     println!("{}", pappify(&message, &args.papież));
