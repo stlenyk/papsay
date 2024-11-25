@@ -5,10 +5,10 @@ A papież version of cowsay with a Ziarno database.
 ## Installation
 
 1. [Install Rust](https://www.rust-lang.org/tools/install)
-2. Install the binary: `cd` inito this project's directory and run
+2. Install the binary:
 
     ```sh
-    cargo install --path=.
+    cargo install --git ssh://git@github.com/stlenyk/papsay.git
     ```
 
 ## Usage
