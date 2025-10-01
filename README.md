@@ -1,6 +1,11 @@
 # papsay
 
-A papież version of cowsay with a Ziarno database.
+A papież version of [cowsay](https://en.wikipedia.org/wiki/Cowsay).
+
+Improvements over cowsay:
+- includes quotes from Ziarno
+- UTF8 compatible
+- blazingly fast 🚀, written in Rust
 
 ## Installation
 
