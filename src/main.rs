@@ -131,9 +131,9 @@ fn main() {
         message
     } else {
         let distribution = rand_distr::Normal::<f32>::new(3.0, 1.0).unwrap();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n_lines = distribution.sample(&mut rng).round() as usize;
-        let idx = rng.gen_range(0..ZIARNO_DATABASE.len());
+        let idx = rng.random_range(0..ZIARNO_DATABASE.len());
 
         ZIARNO_DATABASE[idx..(idx + n_lines).min(ZIARNO_DATABASE.len())].join("\n")
     };
