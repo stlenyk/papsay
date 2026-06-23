@@ -3,6 +3,7 @@
 A papież version of [cowsay](https://en.wikipedia.org/wiki/Cowsay).
 
 Improvements over cowsay:
+
 - includes quotes from Ziarno
 - UTF8 compatible
 - blazingly fast 🚀, written in Rust
@@ -10,10 +11,11 @@ Improvements over cowsay:
 ## Installation
 
 1. [Install Rust](https://www.rust-lang.org/tools/install)
+
 2. Install the binary:
 
     ```sh
-    cargo install --git ssh://git@github.com/stlenyk/papsay.git
+    cargo install --git https://github.com/stlenyk/papsay
     ```
 
 ## Usage
