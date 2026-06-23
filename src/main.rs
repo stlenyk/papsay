@@ -7,7 +7,7 @@ use std::{
 use atty::Stream;
 use clap::{CommandFactory, Parser};
 use clap_complete::Shell;
-use rand::Rng;
+use rand::RngExt;
 use rand_distr::Distribution;
 use unicode_segmentation::UnicodeSegmentation;
 
